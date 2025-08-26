@@ -15,7 +15,7 @@ def get_asset_data(symbol: str, token: str) -> Optional[Dict[str, float]]:
     """
     if len(symbol) <= 6:
         print(f"INFO: {symbol} é uma ação. Delta = 1.")
-        return {"delta": 1.0, "price": 0.0, "strike": 0.0}
+        return {"delta": 1.0, "price": 0.0, "strike": 0.0, "volatility": 0.0}
 
     print(f"INFO: {symbol} é uma opção. Consultando API para obter dados...")
     headers = {"Access-Token": token}
@@ -33,11 +33,12 @@ def get_asset_data(symbol: str, token: str) -> Optional[Dict[str, float]]:
                 delta = data.get("delta")
                 price = data.get("price")
                 strike = data.get("strike")
+                volatility = data.get("volatility")
 
-                if delta is not None and price is not None and strike is not None:
-                    return {"delta": delta, "price": price, "strike": strike}
+                if delta is not None and price is not None and strike is not None and volatility is not None:
+                    return {"delta": delta, "price": price, "strike": strike, "volatility": volatility}
                 else:
-                    print(f"ERRO: A resposta da API para {symbol} não contém os campos 'delta', 'price' e 'strike'.")
+                    print(f"ERRO: A resposta da API para {symbol} não contém os campos 'delta', 'price', 'strike' e 'volatility'.")
                     return None
             else:
                 print(f"ERRO: Falha ao obter dados para {symbol}. Status: {response.status}")
@@ -94,9 +95,10 @@ def main():
                     delta_value = asset_data['delta']
                     price_value = asset_data['price']
                     strike_value = asset_data['strike']
+                    volatility_value = asset_data['volatility']
 
                     if len(symbol) > 6: # Apenas para opções
-                        print(f"INFO: Delta: {delta_value:.4f}, Preço: {price_value:.2f}, Strike: {strike_value:.2f}")
+                        print(f"INFO: Delta: {delta_value:.4f}, Preço: {price_value:.2f}, Strike: {strike_value:.2f}, Volatilidade: {volatility_value:.2f}%")
 
                     position_delta = quantity * delta_value
                     total_delta += position_delta
@@ -115,4 +117,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
