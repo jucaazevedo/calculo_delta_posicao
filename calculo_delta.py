@@ -75,7 +75,8 @@ def main():
     total_delta = 0.0
     try:
         with open(posicao_filename, mode='r', encoding='utf-8') as csvfile:
-            reader = csv.reader(csvfile, delimiter=';')
+            non_comment_lines = (line for line in csvfile if not line.lstrip().startswith('#'))
+            reader = csv.reader(non_comment_lines, delimiter=';')
 #            next(reader)  # Pular o cabeçalho
             for row in reader:
                 if not row or len(row) < 2:

@@ -47,7 +47,7 @@ total_delta=0.0
 API_BASE_URL="https://api.oplab.com.br/v3/market"
 
 # 3. Processamento do arquivo
-while IFS=';' read -r quantity symbol || [[ -n "$symbol" ]]; do
+while IFS=';' read -r quantity symbol; do
     # Ignora linhas vazias ou malformadas
     if [ -z "$symbol" ] || [ -z "$quantity" ]; then
         continue
@@ -105,7 +105,7 @@ while IFS=';' read -r quantity symbol || [[ -n "$symbol" ]]; do
     
     echo "INFO: Delta da posição para $symbol: $position_delta"
 
-done < "$posicao_filename"
+done < <(grep -v '^[[:space:]]*#' "$posicao_filename")
 
 echo ""
 echo "--- Cálculo Finalizado ---"
