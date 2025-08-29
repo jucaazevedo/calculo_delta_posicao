@@ -95,13 +95,13 @@ while IFS=';' read -r quantity symbol; do
         fi
         
         # Formata e imprime os dados da opção
-        printf "INFO: Delta: %.4f, Preço: %.2f, Strike: %.2f, Volatilidade: %.2f%%\n" \
+        LC_NUMERIC=C printf "INFO: Delta: %.4f, Preço: %.2f, Strike: %.2f, Volatilidade: %.2f%%\n" \
             "$delta_value" "$price_value" "$strike_value" "$volatility_value"
     fi
 
     # 4. Cálculo do Delta
-    position_delta=$(awk -v q="$quantity" -v d="$delta_value" 'BEGIN { printf "%.2f", q * d }')
-    total_delta=$(awk -v t="$total_delta" -v p="$position_delta" 'BEGIN { printf "%.2f", t + p }')
+    position_delta=$(LC_NUMERIC=C awk -v q="$quantity" -v d="$delta_value" 'BEGIN { printf "%.2f", q * d }')
+    total_delta=$(LC_NUMERIC=C awk -v t="$total_delta" -v p="$position_delta" 'BEGIN { printf "%.2f", t + p }')
     
     echo "INFO: Delta da posição para $symbol: $position_delta"
 
