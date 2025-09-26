@@ -1,4 +1,3 @@
-
 import sqlite3
 import sys
 import csv
@@ -23,17 +22,17 @@ def get_margin_from_db(asset, cursor):
             return 0.0
     return 0.0
 
-def calculate_total_margin(position_file, cursor):
-    """Calcula a margem líquida para um arquivo de posição e imprime os detalhes."""
+def calculate_margins(position_file, cursor):
+    """Calcula as margens (total, calls, puts) para um arquivo de posição e imprime os detalhes."""
     total_margin = 0.0
+    call_margin_subtotal = 0.0
+    put_margin_subtotal = 0.0
+    
     print("--- Detalhamento do Cálculo de Margem ---")
     try:
         with open(position_file, 'r', newline='', encoding='utf-8') as f:
             for line in f:
-                # Remove comentários e espaços em branco
                 cleaned_line = line.split('#')[0].strip()
-                
-                # Pula a linha se estiver vazia
                 if not cleaned_line: continue
 
                 try:
@@ -46,6 +45,14 @@ def calculate_total_margin(position_file, cursor):
                     unit_margin = get_margin_from_db(asset, cursor)
                     calculated_margin = quantity * unit_margin
                     total_margin += calculated_margin
+
+                    # Acumula subtotais para Calls e Puts
+                    if len(asset) > 4:
+                        option_type_char = asset[4].upper()
+                        if 'A' <= option_type_char <= 'L':
+                            call_margin_subtotal += calculated_margin
+                        elif 'M' <= option_type_char <= 'X':
+                            put_margin_subtotal += calculated_margin
                     
                     is_stock = not any(char.isdigit() for char in asset[4:])
                     if unit_margin == 0.0 and not is_stock:
@@ -58,9 +65,9 @@ def calculate_total_margin(position_file, cursor):
 
     except FileNotFoundError:
         print(f"Erro: Arquivo de posição não encontrado em '{position_file}'.")
-        return None
+        return None, None, None
         
-    return total_margin
+    return total_margin, call_margin_subtotal, put_margin_subtotal
 
 def main():
     """Função principal para calcular a margem da posição."""
@@ -74,9 +81,12 @@ def main():
     try:
         with sqlite3.connect(db_name) as conn:
             cursor = conn.cursor()
-            total_margin = calculate_total_margin(position_file, cursor)
+            total_margin, call_subtotal, put_subtotal = calculate_margins(position_file, cursor)
             
             if total_margin is not None:
+                print("-----------------------------------------")
+                print(f"Margem Parcial de Calls:  R$ {format_brazilian_currency(call_subtotal)}")
+                print(f"Margem Parcial de Puts:   R$ {format_brazilian_currency(put_subtotal)}")
                 print("-----------------------------------------")
                 print(f"Margem Líquida Calculada: R$ {format_brazilian_currency(total_margin)}")
 
