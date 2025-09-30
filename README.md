@@ -54,3 +54,40 @@ python calculo_delta.py posicao.csv
 
 O script irá processar cada linha do arquivo, exibindo os detalhes de cada ativo e, ao final, o delta total da carteira.
 
+## Obtenção de Dados de Margem
+
+O script `obter_margens.py` é responsável por baixar um PDF com as margens de garantia do BTG Pactual, extrair os dados e salvá-los localmente.
+
+### Funcionalidades
+
+*   Baixa o PDF de margens do site do BTG Pactual.
+*   Extrai os dados de ativos e suas respectivas margens.
+*   Salva os dados em um banco de dados SQLite (`margem.db`) e em um arquivo CSV (`margem.csv`).
+
+### Como Usar
+
+Para executar o script, basta rodar o seguinte comando:
+
+```bash
+python obter_margens.py
+```
+
+## Cálculo de Margem da Posição
+
+O script `calcular_margem_posicao.py` calcula a margem total de uma carteira com base nos dados de posição e nas margens previamente obtidas.
+
+### Funcionalidades
+
+*   Lê um arquivo de posições no mesmo formato do `calculo_delta.py`.
+*   Consulta o banco de dados `margem.db` para obter a margem de cada ativo.
+*   Calcula a margem total da carteira e os subtotais para opções de compra (calls) e venda (puts).
+*   Exibe um relatório detalhado do cálculo.
+
+### Como Usar
+
+Para executar o script, passe o nome do seu arquivo de posições como argumento:
+
+```bash
+python calcular_margem_posicao.py seu_arquivo_de_posicoes.csv
+```
+
