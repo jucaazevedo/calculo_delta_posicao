@@ -1,0 +1,24 @@
+Crie um processo para extrair dados de margem de um PDF online e salvá-los em um banco de dados e em um arquivo CSV.
+
+O processo deve seguir os seguintes passos:
+
+1.  **Download do PDF:** Baixe o arquivo PDF a partir da URL: `https://investimentos.btgpactual.com/opcoes/margens`.
+
+2.  **Extração de Dados do PDF:**
+    *   Use uma biblioteca para ler o conteúdo de texto do PDF.
+    *   Itere sobre cada linha de texto extraída.
+    *   Identifique as linhas que contêm informações de ativos e margens. Ignore linhas de cabeçalho ou que não sejam relevantes.
+    *   Para cada linha relevante, extraia o nome do 'ativo' e o valor da 'margem'. Os dados podem estar em formatos como 'ATIVO R$ VALOR' ou 'ATIVO VALOR'. Um ativo é uma string de texto e a margem é um valor numérico.
+
+3.  **Armazenamento em Banco de Dados SQLite:**
+    *   Conecte-se a um banco de dados SQLite chamado `margem.db`.
+    *   Crie uma tabela chamada `margens` se ela não existir, com as colunas: `id` (chave primária autoincrementada), `ativo` (texto) e `margem` (texto).
+    *   Antes de inserir novos dados, apague todos os registros existentes na tabela `margens`.
+    *   Insira os dados de 'ativo' and 'margem' extraídos na tabela `margens`.
+
+4.  **Armazenamento em Arquivo CSV:**
+    *   Crie um arquivo chamado `margem.csv`.
+    *   Escreva um cabeçalho no arquivo com os nomes das colunas: `ativo,margem`.
+    *   Para cada item extraído, escreva uma nova linha no arquivo com o ativo e a margem, separados por vírgula.
+
+Execute este processo para obter os dados mais recentes e armazená-los localmente.
