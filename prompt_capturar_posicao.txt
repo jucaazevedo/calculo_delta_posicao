@@ -1,8 +1,10 @@
-Obter as posicoes gravadas nas telas capturadas da pasta @capturas. Sempre considere que essa pasta foi atualizada e deve ser reprocessada. 
+Atenção: Antes de qualquer outra ação, verifique a lista de arquivos mais recente na pasta @capturas.
 
-Gravar o arquivo @klbn_capturado.csv no formato 'quantidade;ativo'.
+Obter as posicoes gravadas em todos os arquivos de imagem na pasta @capturas.
+
+Gravar o arquivo @bova.csv no formato 'quantidade;ativo'.
 
 Regras:
-1. Extrair a quantidade e o código do ativo de cada opção nas imagens.
-2. Incluir no arquivo apenas as opções cujo código do ativo começa com 'KLBN'.
+1. Para cada imagem encontrada na pasta, extrair a quantidade e o código do ativo de cada opção.
+2. Incluir no arquivo de saída apenas as opções cujo código do ativo começa com 'BOVA'
 3. Se uma mesma opção (mesmo código de ativo) aparecer em mais de uma imagem, incluí-la apenas uma vez no arquivo final.
