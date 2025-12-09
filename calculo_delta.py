@@ -13,7 +13,11 @@ def get_asset_data(symbol: str, token: str) -> Optional[Dict[str, float]]:
     Obtém o delta, price e strike de um ativo. Para ações, o delta é 1.
     Para opções, consulta a API da OpLab usando o endpoint de Black-Scholes.
     """
-    if len(symbol) <= 6:
+    is_stock = False
+    if len(symbol) >= 5 and len(symbol) <= 6 and symbol[4].isdigit():
+        is_stock = True
+
+    if is_stock:
         print(f"INFO: {symbol} é uma ação. Delta = 1.")
         return {"delta": 1.0, "price": 0.0, "strike": 0.0, "volatility": 0.0}
 
@@ -98,7 +102,12 @@ def main():
                     strike_value = asset_data['strike']
                     volatility_value = asset_data['volatility']
 
-                    if len(symbol) > 6: # Apenas para opções
+                    # Determine if it's a stock based on the same logic as get_asset_data
+                    is_stock_in_main = False
+                    if len(symbol) >= 5 and len(symbol) <= 6 and symbol[4].isdigit():
+                        is_stock_in_main = True
+
+                    if not is_stock_in_main: # Apenas para opções
                         print(f"INFO: Delta: {delta_value:.4f}, Preço: {price_value:.2f}, Strike: {strike_value:.2f}, Volatilidade: {volatility_value:.2f}%")
 
                     position_delta = quantity * delta_value

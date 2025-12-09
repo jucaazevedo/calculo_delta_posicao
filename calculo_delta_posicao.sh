@@ -66,7 +66,9 @@ while IFS=';' read -r quantity symbol; do
     echo "Processando ativo: $symbol, Quantidade: $quantity"
 
     # Verifica se é ação ou opção
-    if [ ${#symbol} -le 6 ]; then
+    # Uma ação é considerada se o comprimento do símbolo for entre 5 e 6 caracteres
+    # e o quinto caractere (índice 4) for um dígito.
+    if [ ${#symbol} -ge 5 ] && [ ${#symbol} -le 6 ] && [[ ${symbol:4:1} =~ [0-9] ]]; then
         # É uma ação
         echo "INFO: $symbol é uma ação. Delta = 1."
         delta_value=1.0
