@@ -19,7 +19,7 @@ def get_asset_data(symbol: str, token: str) -> Optional[Dict[str, float]]:
 
     if is_stock:
         print(f"INFO: {symbol} é uma ação. Delta = 1.")
-        return {"delta": 1.0, "price": 0.0, "strike": 0.0, "volatility": 0.0}
+        return {"delta": 1.0, "theta": 0.0, "price": 0.0, "strike": 0.0, "volatility": 0.0}
 
     print(f"INFO: {symbol} é uma opção. Consultando API para obter dados...")
     headers = {"Access-Token": token}
@@ -35,14 +35,15 @@ def get_asset_data(symbol: str, token: str) -> Optional[Dict[str, float]]:
                 data = json.loads(response_body)
                 
                 delta = data.get("delta")
+                theta = data.get("theta")
                 price = data.get("price")
                 strike = data.get("strike")
                 volatility = data.get("volatility")
 
-                if delta is not None and price is not None and strike is not None and volatility is not None:
-                    return {"delta": delta, "price": price, "strike": strike, "volatility": volatility}
+                if delta is not None and theta is not None and price is not None and strike is not None and volatility is not None:
+                    return {"delta": delta, "theta": theta, "price": price, "strike": strike, "volatility": volatility}
                 else:
-                    print(f"ERRO: A resposta da API para {symbol} não contém os campos 'delta', 'price', 'strike' e 'volatility'.")
+                    print(f"ERRO: A resposta da API para {symbol} não contém os campos 'delta', 'theta', 'price', 'strike' e 'volatility'.")
                     return None
             else:
                 print(f"ERRO: Falha ao obter dados para {symbol}. Status: {response.status}")
@@ -77,6 +78,7 @@ def main():
     print("INFO: Token da API carregado com sucesso.")
 
     total_delta = 0.0
+    total_theta = 0.0
     try:
         with open(posicao_filename, mode='r', encoding='utf-8') as csvfile:
             non_comment_lines = (line for line in csvfile if not line.lstrip().startswith('#'))
@@ -98,6 +100,7 @@ def main():
 
                 if asset_data is not None:
                     delta_value = asset_data['delta']
+                    theta_value = asset_data['theta']
                     price_value = asset_data['price']
                     strike_value = asset_data['strike']
                     volatility_value = asset_data['volatility']
@@ -108,11 +111,14 @@ def main():
                         is_stock_in_main = True
 
                     if not is_stock_in_main: # Apenas para opções
-                        print(f"INFO: Delta: {delta_value:.4f}, Preço: {price_value:.2f}, Strike: {strike_value:.2f}, Volatilidade: {volatility_value:.2f}%")
+                        print(f"INFO: Delta: {delta_value:.4f}, Theta: {theta_value:.4f}, Preço: {price_value:.2f}, Strike: {strike_value:.2f}, Volatilidade: {volatility_value:.2f}%")
 
                     position_delta = quantity * delta_value
                     total_delta += position_delta
+                    position_theta = quantity * theta_value
+                    total_theta += position_theta
                     print(f"INFO: Delta da posição para {symbol}: {position_delta:.2f}")
+                    print(f"INFO: Theta da posição para {symbol}: {position_theta:.2f}")
 
     except FileNotFoundError:
         print(f"ERRO FATAL: O arquivo '{posicao_filename}' não foi encontrado no diretório.")
@@ -123,6 +129,7 @@ def main():
 
     print("\n--- Cálculo Finalizado ---")
     print(f"O delta total da sua carteira é: {total_delta:.2f}")
+    print(f"O theta total da sua carteira é: {total_theta:.2f}")
 
 
 if __name__ == "__main__":
