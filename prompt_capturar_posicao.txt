@@ -2,9 +2,11 @@ Atenção: Antes de qualquer outra ação, verifique a lista de arquivos mais re
 
 Obter as posicoes gravadas em todos os arquivos de imagem na pasta @capturas.
 
-Gravar o arquivo @bova.csv no formato 'quantidade;ativo'.
+Gravar o arquivo nome.csv no formato 'quantidade;ativo' (sem esse cabeçalho, só os valores).
+
+Analisar os arquivos de imagem da pasta de capturas. Elas possuem posições de opções. Considere o "nome" usado para gerar nome.csv como sendo as 4 primeiras letras de cada posição (exemplo: BOVAX189 irá derivar BOVA.csv). Também deve agrupar as posições usando essa 4 letras iniciais (exemplo: BOVAX189 e BOVAL150 deverão ser incluídos em BOVA.csv; ABEVL160 deverá ser agrupado em BOVA.csv)
 
 Regras:
 1. Para cada imagem encontrada na pasta, extrair a quantidade e o código do ativo de cada opção.
-2. Incluir no arquivo de saída apenas as opções cujo código do ativo começa com 'BOVA'
-3. Se uma mesma opção (mesmo código de ativo) aparecer em mais de uma imagem, incluí-la apenas uma vez no arquivo final.
+2. Cada posição de opções de ações deve ficar agrupada usando-se as 4 letras iniciais de seu código, como exemplificado acima
+3. Se uma mesma opção (mesmo código de ativo) aparecer em mais de uma imagem, incluí-la apenas uma vez no arquivo final, pois é uma repetição obtida nas capturas.
