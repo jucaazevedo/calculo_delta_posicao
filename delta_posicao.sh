@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# --- calculo_delta_posicao.sh ---
+# --- delta_posicao.sh ---
 #
 # Este script calcula o delta total de uma carteira de ações e opções.
-# Ele replica a funcionalidade do script Python 'calculo_delta.py'.
+# Ele replica a funcionalidade do script Python 'delta_posicao.py'.
 #
 # Dependências:
 # - curl: para fazer requisições HTTP.
@@ -14,9 +14,9 @@
 # 1. Exporte seu token da Oplab:
 #    export TOKEN_OPLAB='seu_token_aqui'
 # 2. Dê permissão de execução ao script:
-#    chmod +x calculo_delta_posicao.sh
+#    chmod +x delta_posicao.sh
 # 3. Execute o script com o arquivo de posição:
-#    ./calculo_delta_posicao.sh seu_arquivo.csv
+#    ./delta_posicao.sh seu_arquivo.csv
 
 # A API e os cálculos usam ponto como separador decimal. LC_ALL tem
 # precedência sobre LC_NUMERIC, então deve ser fixado para todo o script.
@@ -27,7 +27,7 @@ echo "--- Iniciando cálculo de delta da carteira ---"
 # 1. Validação de entrada
 if [ -z "$1" ]; then
     echo "ERRO: O nome do arquivo de posição deve ser fornecido como argumento."
-    echo "Uso: ./calculo_delta_posicao.sh <nome_do_arquivo>"
+    echo "Uso: ./delta_posicao.sh <nome_do_arquivo>"
     exit 1
 fi
 

@@ -64,7 +64,7 @@ def main():
 
     if len(sys.argv) < 2:
         print("ERRO: O nome do arquivo de posição deve ser fornecido como argumento.")
-        print("Uso: python calculo_delta.py <nome_do_arquivo>")
+        print("Uso: python delta_posicao.py <nome_do_arquivo>")
         return
 
     posicao_filename = sys.argv[1]

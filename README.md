@@ -43,13 +43,13 @@ O script espera um arquivo CSV como entrada. Cada linha neste arquivo deve repre
 Para executar o script, passe o nome do seu arquivo de posições como um argumento de linha de comando.
 
 ```bash
-python calculo_delta.py seu_arquivo_de_posicoes.csv
+python delta_posicao.py seu_arquivo_de_posicoes.csv
 ```
 
 ### Exemplo de Execução
 
 ```bash
-python calculo_delta.py posicao.csv
+python delta_posicao.py posicao.csv
 ```
 
 O script irá processar cada linha do arquivo, exibindo os detalhes de cada ativo e, ao final, o delta total da carteira.
@@ -95,11 +95,11 @@ python obter_margens.py
 
 ## Cálculo de Margem da Posição
 
-O script `calcular_margem_posicao.py` calcula a margem total de uma carteira com base nos dados de posição e nas margens previamente obtidas.
+O script `margem_posicao.py` calcula a margem total de uma carteira com base nos dados de posição e nas margens previamente obtidas.
 
 ### Funcionalidades
 
-*   Lê um arquivo de posições no mesmo formato do `calculo_delta.py`.
+*   Lê um arquivo de posições no mesmo formato do `delta_posicao.py`.
 *   Consulta o banco de dados `margem.db` para obter a margem de cada ativo.
 *   Calcula a margem total da carteira e os subtotais para opções de compra (calls) e venda (puts).
 *   Exibe um relatório detalhado do cálculo.
@@ -109,6 +109,6 @@ O script `calcular_margem_posicao.py` calcula a margem total de uma carteira com
 Para executar o script, passe o nome do seu arquivo de posições como argumento:
 
 ```bash
-python calcular_margem_posicao.py seu_arquivo_de_posicoes.csv
+python margem_posicao.py seu_arquivo_de_posicoes.csv
 ```
 
