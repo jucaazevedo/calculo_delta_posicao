@@ -49,6 +49,7 @@ echo "INFO: Token da API carregado com sucesso."
 # 2. Inicialização
 total_delta=0.0
 total_theta=0.0
+total_vega=0.0
 API_BASE_URL="https://api.oplab.com.br/v3/market"
 
 # 3. Processamento do arquivo
@@ -78,6 +79,7 @@ while IFS=';' read -r quantity symbol; do
         echo "INFO: $symbol é uma ação. Delta = 1."
         delta_value=1.0
         theta_value=0.0
+        vega_value=0.0
     else
         # É uma opção, consulta a API
         echo "INFO: $symbol é uma opção. Consultando API para obter dados..."
@@ -94,18 +96,19 @@ while IFS=';' read -r quantity symbol; do
         # Extrai dados usando jq
         delta_value=$(echo "$response" | jq -r '.delta')
         theta_value=$(echo "$response" | jq -r '.theta')
+        vega_value=$(echo "$response" | jq -r '.vega')
         price_value=$(echo "$response" | jq -r '.price')
         strike_value=$(echo "$response" | jq -r '.strike')
         volatility_value=$(echo "$response" | jq -r '.volatility')
 
-        if [ "$delta_value" = "null" ] || [ "$theta_value" = "null" ] || [ "$price_value" = "null" ] || [ "$strike_value" = "null" ] || [ "$volatility_value" = "null" ]; then
+        if [ "$delta_value" = "null" ] || [ "$theta_value" = "null" ] || [ "$vega_value" = "null" ] || [ "$price_value" = "null" ] || [ "$strike_value" = "null" ] || [ "$volatility_value" = "null" ]; then
             echo "ERRO: A resposta da API para $symbol não contém os campos esperados."
             continue
         fi
         
         # Formata e imprime os dados da opção
-        LC_NUMERIC=C printf "INFO: Delta: %.4f, Theta: %.4f, Preço: %.2f, Strike: %.2f, Volatilidade: %.2f%%\n" \
-            "$delta_value" "$theta_value" "$price_value" "$strike_value" "$volatility_value"
+        LC_NUMERIC=C printf "INFO: Delta: %.4f, Theta: %.4f, Vega: %.4f, Preço: %.2f, Strike: %.2f, Volatilidade: %.2f%%\n" \
+            "$delta_value" "$theta_value" "$vega_value" "$price_value" "$strike_value" "$volatility_value"
     fi
 
     # 4. Cálculo do Delta
@@ -113,9 +116,12 @@ while IFS=';' read -r quantity symbol; do
     total_delta=$(LC_NUMERIC=C awk -v t="$total_delta" -v p="$position_delta" 'BEGIN { printf "%.2f", t + p }')
     position_theta=$(LC_NUMERIC=C awk -v q="$quantity" -v t="$theta_value" 'BEGIN { printf "%.10f", q * t }')
     total_theta=$(LC_NUMERIC=C awk -v t="$total_theta" -v p="$position_theta" 'BEGIN { printf "%.10f", t + p }')
+    position_vega=$(LC_NUMERIC=C awk -v q="$quantity" -v v="$vega_value" 'BEGIN { printf "%.10f", q * v }')
+    total_vega=$(LC_NUMERIC=C awk -v t="$total_vega" -v p="$position_vega" 'BEGIN { printf "%.10f", t + p }')
     
     echo "INFO: Delta da posição para $symbol: $position_delta"
     LC_NUMERIC=C printf "INFO: Theta da posição para %s: %.2f\n" "$symbol" "$position_theta"
+    LC_NUMERIC=C printf "INFO: Vega da posição para %s: %.2f\n" "$symbol" "$position_vega"
 
 done < <(grep -v '^[[:space:]]*#' "$posicao_filename")
 
@@ -123,3 +129,4 @@ echo ""
 echo "--- Cálculo Finalizado ---"
 printf "O delta total da sua carteira é: %.2f\n" "$total_delta"
 LC_NUMERIC=C printf "O theta total da sua carteira é: %.2f\n" "$total_theta"
+LC_NUMERIC=C printf "O vega total da sua carteira é: %.2f\n" "$total_vega"
