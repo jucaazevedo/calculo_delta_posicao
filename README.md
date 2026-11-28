@@ -54,11 +54,12 @@ python delta_posicao.py posicao.csv
 
 O script irá processar cada linha do arquivo, exibindo os detalhes de cada ativo e, ao final, o delta total da carteira.
 
-## Captura de Posições de Opções
+## Captura de Posições de Ações e Opções
 
-`capturar_posicao.py` lê as colunas **Ativo** e **Qtd.** das imagens da tabela
-de opções do BTG Pactual em `capturas/`. O OCR roda localmente e usa Pillow
-(já listado em `requirements.txt`) e Tesseract com o idioma inglês. No Ubuntu,
+`capturar_posicao.py` lê as colunas **Ativo** e **Qtd.** das tabelas
+de ações e opções do BTG Pactual nas imagens em `capturas/`. O OCR roda
+localmente e usa Pillow (já listado em `requirements.txt`) e Tesseract com o
+idioma inglês. No Ubuntu,
 instale o Tesseract com `sudo apt install tesseract-ocr tesseract-ocr-eng`.
 
 ```bash
@@ -67,10 +68,10 @@ python3 capturar_posicao.py
 
 O programa grava na pasta do projeto um CSV por grupo de quatro caracteres
 iniciais do ativo. Cada linha contém `quantidade;ativo`, sem cabeçalho.
-Quando a mesma opção aparece em várias imagens, prevalece a quantidade da
+Quando o mesmo ativo aparece em várias imagens, prevalece a quantidade da
 imagem com a data de modificação mais recente. O programa substitui os CSVs
-dos grupos encontrados, incluindo qualquer posição em ações que estivesse
-nesses arquivos.
+dos grupos encontrados com as posições lidas nas capturas. Por exemplo,
+`B3SA.csv` reúne a posição em `B3SA3` e as opções com prefixo `B3SA`.
 
 Use `--capturas` para ler outra pasta e `--saida` para gravar os CSVs em um
 destino diferente.

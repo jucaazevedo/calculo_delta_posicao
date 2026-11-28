@@ -1,4 +1,4 @@
-"""Extrai posições da tabela de opções do BTG Pactual por OCR local."""
+"""Extrai posições das tabelas de ações e opções do BTG Pactual por OCR local."""
 
 import argparse
 import csv
@@ -17,6 +17,7 @@ from PIL import Image, ImageOps
 PASTA_PROJETO = Path(__file__).resolve().parent
 EXTENSOES = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff", ".gif"}
 CODIGO_OPCAO = re.compile(r"[A-Z][A-Z0-9]{3}[A-X][0-9]+(?:W[1-5])?")
+CODIGO_ACAO = re.compile(r"[A-Z][A-Z0-9]{3}[0-9]+")
 DIGITOS_OCR = str.maketrans("OISZB", "01528")
 QUANTIDADE = re.compile(r"[+-]?(?:[0-9]+|[0-9]{1,3}(?:\.[0-9]{3})+)")
 
@@ -44,6 +45,7 @@ def localizar_colunas(imagem):
     ampliada = imagem.resize((imagem.width * 2, imagem.height * 2), Image.Resampling.LANCZOS)
     texto = executar_ocr(ImageOps.invert(ampliada), 11, tsv=True)
     palavras = list(csv.DictReader(io.StringIO(texto), delimiter="\t"))
+    tabelas = []
     for ativo in palavras:
         if ativo["text"].lower() != "ativo":
             continue
@@ -54,17 +56,25 @@ def localizar_colunas(imagem):
             for palavra in palavras
             if palavra["text"] and abs(int(palavra["top"]) - topo) <= altura / 2
         }
-        if not esquerda < linha.get("strike", 0) < linha.get("peso", 0):
+        peso = linha.get("peso", 0)
+        strike = linha.get("strike", 0)
+        qtd = next((linha[nome] for nome in ("qtd", "qt") if nome in linha), 0)
+        if peso <= esquerda or (strike and not esquerda < strike < peso):
             continue
+        if qtd <= peso and (qtd or not strike):
+            continue
+
         escala = int(ativo["width"]) / 66
-        qtd = next((linha[nome] for nome in ("qtd", "qt") if nome in linha),
-                   linha["peso"] + 144 * escala)
-        return (
+        qtd = qtd or peso + 144 * escala
+        tabelas.append((
             round(topo / 2 + 13 * escala),
-            (round(esquerda / 2 + 20 * escala), round(linha["strike"] / 2 - 26 * escala)),
-            (round(linha["peso"] / 2 + 37 * escala), round(qtd / 2 + 35 * escala)),
-        )
-    raise ValueError("cabeçalho da tabela de opções não encontrado")
+            (round(esquerda / 2 + 20 * escala), round((strike or peso) / 2 - 26 * escala)),
+            (round(peso / 2 + 37 * escala), round(qtd / 2 + 35 * escala)),
+            CODIGO_OPCAO if strike else CODIGO_ACAO,
+        ))
+    if not tabelas:
+        raise ValueError("cabeçalho de ações ou opções não encontrado")
+    return sorted(tabelas, key=lambda tabela: tabela[0])
 
 
 def linhas_visiveis(coluna):
@@ -81,8 +91,10 @@ def linhas_visiveis(coluna):
             inicio = None
 
 
-def ler_celula(celula, caracteres):
+def ler_celula(celula, caracteres, *, limiar=None):
     ampliada = celula.resize((celula.width * 4, celula.height * 4), Image.Resampling.LANCZOS)
+    if limiar is not None:
+        ampliada = ampliada.point(lambda pixel: 255 if pixel >= limiar else 0)
     preparada = ImageOps.expand(ImageOps.invert(ampliada), border=12, fill=255)
     return "".join(executar_ocr(preparada, 7, caracteres=caracteres).split())
 
@@ -99,41 +111,52 @@ def tirar_seta(celula):
     return celula
 
 
-def normalizar_codigo(codigo):
-    # O sufixo é numérico, com W e o número da semana nas opções semanais.
-    raiz_e_serie, sufixo = codigo[:5], codigo[5:]
-    return raiz_e_serie + sufixo.translate(DIGITOS_OCR)
+def normalizar_codigo(codigo, padrao):
+    # O sufixo numérico vem após a raiz e, nas opções, após a letra da série.
+    inicio_sufixo = 5 if padrao is CODIGO_OPCAO else 4
+    return codigo[:inicio_sufixo] + codigo[inicio_sufixo:].translate(DIGITOS_OCR)
 
 
 def extrair_posicoes(caminho):
     with Image.open(caminho) as arquivo:
         imagem = ImageOps.exif_transpose(arquivo).convert("L")
-    topo, ativo, qtd = localizar_colunas(imagem)
+    tabelas = localizar_colunas(imagem)
+    posicoes = []
+    limites = [tabela[0] for tabela in tabelas[1:]] + [imagem.height]
+    for (topo, ativo, qtd, padrao), limite in zip(tabelas, limites):
+        posicoes.extend(ler_tabela(imagem, topo, ativo, qtd, padrao, limite))
+    if not posicoes:
+        raise ValueError("nenhuma posição encontrada")
+    return posicoes
+
+
+def ler_tabela(imagem, topo, ativo, qtd, padrao, limite):
     # Sob o cabeçalho, o espaço à esquerda do ícone tem a cor uniforme do painel.
     x_painel = max(0, ativo[0] - round((ativo[1] - ativo[0]) * 0.55))
     fundo = imagem.getpixel((x_painel, topo))
-    fim = imagem.height
-    for y in range(topo, imagem.height - 3):
+    fim = limite
+    for y in range(topo, limite - 3):
         if all(abs(imagem.getpixel((x_painel, y + dy)) - fundo) > 8 for dy in range(4)):
             fim = y
             break
 
     coluna_ativo = imagem.crop((ativo[0], topo, ativo[1], fim))
     coluna_qtd = imagem.crop((qtd[0], topo, qtd[1], fim))
+    # A binarização deixa os algarismos dos códigos de ações mais nítidos.
+    limiar_ativo = 160 if padrao is CODIGO_ACAO else None
     posicoes = []
     for inicio, final in linhas_visiveis(coluna_ativo):
         superior = max(0, inicio - 3)
         inferior = min(coluna_ativo.height, final + 3)
         celula_ativo = coluna_ativo.crop((0, superior, coluna_ativo.width, inferior))
         codigo = normalizar_codigo(ler_celula(
-            tirar_seta(celula_ativo), "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"))
+            tirar_seta(celula_ativo), "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+            limiar=limiar_ativo), padrao)
         quantidade = ler_celula(coluna_qtd.crop(
             (0, superior, coluna_qtd.width, inferior)), "+-0123456789.")
-        if not CODIGO_OPCAO.fullmatch(codigo) or not QUANTIDADE.fullmatch(quantidade):
+        if not padrao.fullmatch(codigo) or not QUANTIDADE.fullmatch(quantidade):
             raise ValueError(f"linha na altura {topo + inicio}: ativo {codigo!r}, quantidade {quantidade!r}")
         posicoes.append((codigo, int(quantidade.replace(".", ""))))
-    if not posicoes:
-        raise ValueError("nenhuma posição encontrada")
     return posicoes
 
 
